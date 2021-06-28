@@ -82,22 +82,10 @@ class MongoDBTaskStore(BaseTaskStore):
         :param int now: 时间戳
         :param int count: 获取任务数量
         '''
-        conditions = {'$or': [
-            {
-                'next_run_time': {'lte': now},
-                'deleted_at': 0,
-                'max_sched_times': 0
-            },
-            {
-                'next_run_time': {'lte': now},
-                'deleted_at': 0,
-                'max_sched_times': {'gt': 0},
-                '$expr': {'$gte': ['$sched_times', '$max_sched_times']}
-            }
-        ]}
         conditions = {
             'next_run_time': {'$lte': now},
             'deleted_at': 0,
+            '$expr': {'$lt': ['$sched_times', '$max_sched_times']}
         }
         documents = self.collection.find(conditions, sort=[('next_run_time', ASCENDING)]).limit(count)
         tasks = []
@@ -111,8 +99,12 @@ class MongoDBTaskStore(BaseTaskStore):
         '''
         :return int or None: 确保返回整数
         '''
+        conditions = {
+            'deleted_at': 0,
+            '$expr': {'$lt': ['$sched_times', '$max_sched_times']}
+        }
         document = self.collection.find_one(
-            {'deleted_at': 0},
+            conditions,
             projection=['next_run_time'],
             sort=[('next_run_time', ASCENDING)]
         )

@@ -7,7 +7,7 @@ class Task:
         self.func_args = kwargs.get('func_args', '[]')
         self.func_kwargs = kwargs.get('func_kwargs', '{}')
         self.sched_times = kwargs.get('sched_times', 0)
-        self.max_sched_times = kwargs.get('max_sched_times', 0)
+        self.max_sched_times = kwargs.get('max_sched_times', 1000)
         self.next_run_time = kwargs.get('next_run_time', 0)
         self.incr_step = kwargs.get('incr_step', 1)
         self.created_at = kwargs.get('created_at', 0)
