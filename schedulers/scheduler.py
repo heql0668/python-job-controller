@@ -104,23 +104,40 @@ class Scheduler(object):
             with self._worker_cnt_lock:
                 self._avai_worker_cnt -= 1
             task.sched_times += 1
+            max_sched_times = task.max_sched_times
             start_at = time.time()
+            to_be_continue = True
+            args = ()
+            kwargs = {}
             try:
-                f = self._handlers[task.func_name]
                 args = json.loads(task.func_args)
                 kwargs = json.loads(task.func_kwargs)
+                max_sched_times = kwargs.get('max_sched_times', max_sched_times)
+            except Exception as err:
+                self._logger.error(f'任务{task.id}加载参数报错: {err}', exc_info=True)
+            to_be_continue = False if task.sched_times >= max_sched_times and max_sched_times > 0 else True
+            try:
+                f = self._handlers[task.func_name]
                 res = f(*args, **kwargs)
                 if res:
                     task.deleted_at = int(time.time())
                 else:
                     task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
             except TaskContinueException:
-                task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
+                if to_be_continue:
+                    task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
+                else:
+                    task.deleted_at = int(time.time())
+                    self._logger.error('任务{}达到最大处理次数限制: {}'.format(task.id, err), exc_info=True)
             except TaskStopException:
                 task.deleted_at = int(time.time())
             except Exception as err:
-                self._logger.error('处理任务失败: {}'.format(err), exc_info=True)
-                task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
+                if to_be_continue:
+                    self._logger.error('处理任务{}失败: {}'.format(task.id, err), exc_info=True)
+                    task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
+                else:
+                    task.deleted_at = int(time.time())
+                    self._logger.error('任务{}达到最大处理次数限制: {}'.format(task.id, err), exc_info=True)
             finally:
                 end_at = time.time()
                 cost = round(end_at - start_at, 2)
