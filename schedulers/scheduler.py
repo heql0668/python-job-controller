@@ -1,6 +1,6 @@
 import sys
 import json
-from stores.base import ConflictingIdError, TaskLookupError
+from python_tasks.stores.base import ConflictingIdError, TaskLookupError
 import time
 import queue
 import logging
