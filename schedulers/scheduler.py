@@ -1,6 +1,6 @@
 import sys
 import json
-from python_tasks.stores.base import ConflictingIdError, TaskLookupError
+from ..stores.base import ConflictingIdError, TaskLookupError
 import time
 import queue
 import logging
@@ -9,11 +9,11 @@ from types import FunctionType
 from typing import List
 from datetime import datetime
 
-from exceptions import TaskStopException, TaskContinueException
+from ..exceptions import TaskStopException, TaskContinueException
 
-import lock
-import stores
-from stores.task import Task
+from ..lock import LocalLock, LockClass
+from ..stores.task import Task
+from ..stores import BaseTaskStore
 
 
 class Scheduler(object):
@@ -22,8 +22,8 @@ class Scheduler(object):
                  max_batch_size=50,
                  min_batch_size=10,
                  task_lock_timeout=30,
-                 store: stores.BaseTaskStore = None,
-                 lockClass: lock.LockClass = lock.LocalLock,
+                 store: BaseTaskStore = None,
+                 lockClass: LockClass = LocalLock,
                  logger: logging.Logger = None):
         '''
         param int max_batch_size: 批次处理任务数量最大值
