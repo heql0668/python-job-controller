@@ -118,11 +118,8 @@ class Scheduler(object):
             to_be_continue = False if task.sched_times >= max_sched_times and max_sched_times > 0 else True
             try:
                 f = self._handlers[task.func_name]
-                res = f(*args, **kwargs)
-                if res:
-                    task.deleted_at = int(time.time())
-                else:
-                    task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
+                f(*args, **kwargs)
+                task.deleted_at = int(time.time())
             except TaskContinueException:
                 if to_be_continue:
                     task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
