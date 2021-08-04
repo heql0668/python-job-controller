@@ -120,7 +120,7 @@ class Scheduler(object):
                 f = self._handlers[task.func_name]
                 f(*args, **kwargs)
                 task.deleted_at = int(time.time())
-            except TaskContinueException:
+            except TaskContinueException as err:
                 if to_be_continue:
                     task.next_run_time = int(time.time()) + task.sched_times * task.incr_step
                 else:
