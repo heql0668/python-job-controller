@@ -115,6 +115,7 @@ class Scheduler(object):
                 max_sched_times = kwargs.get('max_sched_times', max_sched_times)
             except Exception as err:
                 self._logger.error(f'任务{task.id}加载参数报错: {err}', exc_info=True)
+            kwargs['sched_times'] = task.sched_times
             to_be_continue = False if task.sched_times >= max_sched_times and max_sched_times > 0 else True
             try:
                 f = self._handlers[task.func_name]
